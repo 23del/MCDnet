@@ -33,7 +33,7 @@ def act_layer(act, inplace=False, neg_slope=0.2, n_prelu=1):
         raise NotImplementedError('activation layer [%s] is not found' % act)
     return layer
 
-#   Efficient up-convolution block (EUCB)
+#(EUCB)
 class EUCB(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, activation='relu'):
         super(EUCB, self).__init__()
@@ -56,18 +56,7 @@ class EUCB(nn.Module):
         x = channel_shuffle(x, self.in_channels)
         x = self.pwc(x)
         return x
-# if __name__ == '__main__':
-#     input = torch.randn(1, 32, 64, 64)  #B C H W
-#
-#     block = EUCB(in_channels=32, out_channels=32)
-#
-#     print(input.size())
-#
-#     output = block(input)
-#     print(output.size())
 
-# 论文题目：PlainUSR: Chasing Faster ConvNet for Efficient Super-Resolution
-# 论文地址：https://openaccess.thecvf.com/content/ACCV2024/papers/Wang_PlainUSR_Chasing_Faster_ConvNet_for_Efficient_Super-Resolution_ACCV_2024_paper.pdf
 class SoftPooling2D(torch.nn.Module):
     def __init__(self, kernel_size, stride=None, padding=0):
         super(SoftPooling2D, self).__init__()
@@ -104,21 +93,7 @@ class LocalAttention(nn.Module):
         w = F.interpolate(self.body(x), (x.size(2), x.size(3)), mode='bilinear', align_corners=False)
 
         return x * w * g  # (w + g) #self.gate(x, w)
-
-# if __name__ == '__main__':
-#     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-#     print(f"Using device: {device}")
-#
-#     block = LocalAttention(channels=32).to(device)
-#     input = torch.rand(1, 32, 256, 256).to(device)
-#
-#     output = block(input)
-#     print(input.shape)
-#     print(output.shape)
-
-
-# 论文地址：https://arxiv.org/pdf/2108.01072
-# 论文：S2-MLPv2: Improved Spatial-Shift MLP Architecture for Vision
+        
 def spatial_shift1(x):
     b, w, h, c = x.size()
     x[:, 1:, :, :c // 4] = x[:, :w - 1, :, :c // 4]
@@ -178,17 +153,6 @@ class S2Attention(nn.Module):
         x = x.permute(0, 3, 1, 2)
         return x
 
-# if __name__ == '__main__':
-#     input = torch.randn(50, 512, 7, 7)
-#     block = S2Attention(channels=512)
-#     output = block(input)
-#     print(output.shape)
-
-
-# 论文；MCANet: A joint semantic segmentation framework of optical and SAR images for land use classification
-# Github地址：https://github.com/Ray010221/MCANet
-# 全网最全100➕即插即用模块GitHub地址：https://github.com/ai-dawang/PlugNPlay-Modules
-#图像特征融合mcam  需要空间太大
 class MCAM(nn.Module):
     def __init__(self,
                  in_channels,
@@ -311,20 +275,6 @@ class MCAM(nn.Module):
         y = self.W(y)
         return y
 
-# if __name__ == '__main__':
-#     block = MCAM(in_channels=96)
-#     sar = torch.randn(2, 96, 32, 32)
-#     opt = torch.randn(2, 96, 64, 64)
-#     print("input:", sar.shape, opt.shape)
-#     print("output:", block(sar, opt).shape)
-
-
-# --------------------------------------------------------
-# 论文：DEA-Net: Single image dehazing based on detail enhanced convolution and content-guided attention
-# GitHub地址：https://github.com/cecret3350/DEA-Net/tree/main
-# --------------------------------------------------------
-
-
 from einops.layers.torch import Rearrange
 
 class SpatialAttention(nn.Module):
@@ -352,7 +302,7 @@ class ECA(nn.Module):
         y = self.conv(y.squeeze(-1).transpose(-1, -2))  # (B, 1, C)
         y = self.sigmoid(y).transpose(-1, -2).unsqueeze(-1)  # (B, C, 1, 1)
         return x * y.expand_as(x)
-class ChannelAttention(nn.Module): #原版
+class ChannelAttention(nn.Module):
     def __init__(self, dim, reduction=8):
         super(ChannelAttention, self).__init__()
         self.gap = nn.AdaptiveAvgPool2d(1)
@@ -366,23 +316,7 @@ class ChannelAttention(nn.Module): #原版
         x_gap = self.gap(x)
         cattn = self.ca(x_gap)
         return cattn
-# class ChannelAttention(nn.Module):# 改进版
-#     def __init__(self, reduction=8):
-#         super(ChannelAttention, self).__init__()
-#         self.gap = nn.AdaptiveAvgPool2d(1)
-#         self.reduction = reduction
-#         self.ca = None  # 延后初始化
-#
-#     def forward(self, x):
-#         if self.ca is None:
-#             dim = x.shape[1]
-#             self.ca = nn.Sequential(
-#                 nn.Conv2d(dim, dim // self.reduction, 1),
-#                 nn.ReLU(inplace=True),
-#                 nn.Conv2d(dim // self.reduction, dim, 1),
-#             ).to(x.device)
-#         x_gap = self.gap(x)
-#         return self.ca(x_gap)
+
 class PixelAttention(nn.Module):
     def __init__(self, dim):
         super(PixelAttention, self).__init__()
@@ -420,19 +354,6 @@ class CGAFusion(nn.Module):
         out = result + initial
         return out
 
-# 特征融合
-# if __name__ == '__main__':
-#     block = CGAFusion(32)
-#     input1 = torch.rand(3, 32, 64, 64) # 输入 N C H W
-#     input2 = torch.rand(3, 32, 64, 64)
-#     output = block(input1, input2)
-#     print(output.size())
-
-
-# 论文：Reciprocal Attention Mixing Transformer for Lightweight Image Restoration(CVPR 2024 Workshop)
-# 论文地址：https://arxiv.org/abs/2305.11474
-# 全网最全100➕即插即用模块GitHub地址：https://github.com/ai-dawang/PlugNPlay-Modules
-# H-RAMi(Hierarchical Reciprocal Attention Mixer)
 class MobiVari1(nn.Module):  # MobileNet v1 Variants
     def __init__(self, dim, kernel_size, stride, act=nn.LeakyReLU, out_dim=None):
         super(MobiVari1, self).__init__()
@@ -500,25 +421,6 @@ class HRAMi(nn.Module):
 
     def flops(self, resolutions):
         return self.mobivari.flops(resolutions)
-
-# if __name__ == '__main__':
-#     hrami = HRAMi(dim=64)
-#
-#     # Create sample input tensors
-#     # Assume the input tensors have spatial dimensions of 32x32, 16x16, 8x8, etc.
-#     input = [
-#         torch.randn(1, 64, 32, 32),  # Level 0
-#         torch.randn(1, 64, 16, 16),  # Level 1
-#         torch.randn(1, 64, 8, 8),  # Level 2
-#         torch.randn(1, 64, 32, 32)  # Level 3 (final level)
-#     ]
-#
-#     # Pass the input through HRAMi
-#     output = hrami(input)
-#
-#     # Print the shapes of input and output
-#     print(f"Input shapes: {[attn.shape for attn in input]}")
-#     print(output.size())
 
 class CMA_Block(nn.Module):
     def __init__(self, in_channel, hidden_channel, out_channel, downsample=True):

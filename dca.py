@@ -1,5 +1,3 @@
-# 论文地址：https://arxiv.org/pdf/2303.17696.pdf
-# 论文：Dual Cross-Attention for Medical Image Segmentation, Engineering Applications of Artificial Intelligence
 import torch
 import torch.nn as nn
 import einops

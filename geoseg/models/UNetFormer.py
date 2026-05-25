@@ -55,7 +55,7 @@ class ConvMlp(nn.Module):
         return x
 
 #rectangular self-calibration attention (RCA)
-class MSA(nn.Module):  # 米字注意力
+class MSA(nn.Module): 
     def __init__(self, inp, kernel_size=1, ratio=1, band_kernel_size=11, dw_size=(1, 1), padding=(0, 0), stride=1,
                  square_kernel_size=2, relu=True):
         super(MSA, self).__init__()
@@ -151,8 +151,8 @@ class RCA(nn.Module):
 
         return out
 
-#Rectangular Self-Calibration Module (RCM)
-class RCM(nn.Module):
+#Rectangular Self-Calibration Module (MSM)
+class MSM(nn.Module):
     """ MetaNeXtBlock 块
     参数:
         dim (int): 输入通道数.
@@ -567,52 +567,24 @@ class UNetFormer(nn.Module):
 
         self.decoder = Decoder(encoder_channels, decode_channels, dropout, window_size, num_classes)
 
-        self.rcm = RCM(3)
+        self.msm = MSM(3)
         self.rca = RCA(3)
-        self.la = LocalAttention(3)
-        self.la0 = LocalAttention(64)
-        self.la1 = LocalAttention(128)
-        self.la2 = LocalAttention(256)
-        self.la3 = LocalAttention(512)
-        # self.s2 = S2Attention(3)
         self.cg0 = CGAFusion(64)
         self.cg1 = CGAFusion(128)
         self.cg2 = CGAFusion(256)
         self.cg3 = CGAFusion(512)
-        self.mi = HRAMi(3)
-        a = [64, 128, 256, 512]
-        self.dca = DCA(features=a)
-        self.mass0 = MSAA(64, 64)
-        self.mass1 = MSAA(128, 128)
-        self.mass2 = MSAA(256, 256)
-        self.mass3 = MSAA(512, 512)
-        self.cma0 = CMA_Block(64, 32, 64)
-        self.cma1 = CMA_Block(128, 64, 128)
-        self.cma2 = CMA_Block(256, 128, 256)
-        self.cma3 = CMA_Block(512, 256, 512)
-
 
     def forward(self, x):# ([8, 3, 1024, 1024])
-        # x1 = self.rcm(x)
+        x1 = self.msm(x)
         # x2 = self.la(x)
         # x = self.s2(x)
         h, w = x.size()[-2:]
-        # a1, a2, a3, a4 = self.backbone(x)
-        res1, res2, res3, res4 = self.backbone(x)
-        # res1 = self.cg0(a1, res1)
-        # res2 = self.cg1(a2, res2)
-        # res3 = self.cg2(a3, res3)
-        # res4 = self.cg3(a4, res4)
-
-        # mas1 = self.mass0(lar1, rr1, res1)
-        # mas2 = self.mass1(lar2, rr2, res2)
-        # mas3 = self.mass2(lar3, rr3, res3)
-        # mas4 = self.mass3(lar4, rr4, res4)
-
-        # res1 = self.cma0(a1, res1)
-        # res2 = self.cma1(a2, res2)
-        # res3 = self.cma2(a3, res3)
-        # res4 = self.cma3(a4, res4)
+        a1, a2, a3, a4 = self.backbone(x)
+        res1, res2, res3, res4 = self.backbone(x1)
+        res1 = self.cg0(a1, res1)
+        res2 = self.cg1(a2, res2)
+        res3 = self.cg2(a3, res3)
+        res4 = self.cg3(a4, res4)
         if self.training:
             x, ah = self.decoder(res1, res2, res3, res4, h, w)
             return x, ah
